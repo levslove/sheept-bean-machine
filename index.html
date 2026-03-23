@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bean Machine</title><script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root { --pr:#faf5f0; --sc:#f97316; --ac:#e9aa05; --bg:#fffbf5; --tx:#1c1917; }
+* { margin:0; padding:0; box-sizing:border-box; font-family:system-ui; }
+body { background:var(--bg); color:var(--tx); }
+.nav { display:flex; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid var(--pr); }
+.hero { text-align:center; padding:4rem 2rem; } .hero h1 { color:var(--sc); font-size:3rem; }
+.btn { padding:0.5rem 1rem; background:var(--ac); color:#fff; border:none; border-radius:8px; cursor:pointer; }
+.section { padding:2rem; max-width:800px; margin:0 auto; } .card { border:1px solid var(--pr); padding:1rem; border-radius:8px; margin-bottom:1rem; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; }
+input, textarea { width:100%; padding:0.5rem; margin-bottom:0.5rem; background:var(--bg); color:var(--tx); border:1px solid var(--pr); }
+</style></head><body>
+<nav class="nav"><div>🐑 Bean Machine</div><a href="#auth" style="color:var(--tx)">Sign In</a></nav>
+<section class="hero"><h1>Bean Machine</h1><p>A landing page for a coffee shop called Bean Machine</p></section>
+<section class="section" id="browse"><h2>🛍️ Browse</h2><div class="grid" id="listings-grid">Loading...</div></section>
+<section class="section" id="auth"><h2>Join</h2><div class="card"><input id="user" placeholder="Username"><input id="pass" type="password" placeholder="Password"><button class="btn" onclick="auth('/register')">Register</button><button class="btn" onclick="auth('/login')">Login</button></div></section>
+<footer style="text-align:center;padding:2rem;">Built with 🐑 Sheept</footer>
+<script>
+const API = window.location.origin; let TOKEN = localStorage.getItem('token');
+async function api(path, opts = {}) {
+    if(TOKEN) opts.headers = {...opts.headers, 'Authorization': 'Bearer '+TOKEN};
+    opts.headers = {...opts.headers, 'Content-Type': 'application/json'};
+    const r = await fetch(API+path, opts); if(!r.ok) throw new Error('Error'); return r.json();
+}
+async function auth(path) {
+    try { const d = await api(path, {method:'POST', body:JSON.stringify({username:document.getElementById('user').value, password:document.getElementById('pass').value})}); TOKEN=d.token; localStorage.setItem('token',TOKEN); loadData(); alert('Success!'); } catch(e) { alert('Failed'); }
+}
+async function loadData() {try { const items = await api('/listings'); document.getElementById('listings-grid').innerHTML = items.map(l => `<div class="card"><h3>${l.title}</h3><p>$${l.price}</p><button class="btn" onclick="api('/cart/add?listing_id='+l.id, {method:'POST'})">Add</button></div>`).join('')||'No listings'; } catch(e) {}}
+if(TOKEN) loadData();
+</script></body></html>
